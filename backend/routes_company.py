@@ -30,6 +30,11 @@ def company_dashboard():
         if not company:
             return jsonify({'error': 'Company not found'}), 404
         
+        # Check if company is blacklisted
+        if company.is_blacklisted:
+            return jsonify({'error': 'Your company has been blacklisted'}), 403
+             
+
         # Check if company is approved
         if company.approval_status != 'approved':
             return jsonify({'error': 'Company not approved yet. Please wait for admin approval'}), 403
@@ -89,13 +94,14 @@ def create_job():
     try:
         user_id = get_jwt_identity()
         company = Company.query.filter_by(user_id=int(user_id)).first()
-        
         if not company:
             return jsonify({'error': 'Company not found'}), 404
         
+        if company.is_blacklisted:
+            return jsonify({'error': 'Your company has been blacklisted'}), 403
+        
         if company.approval_status != 'approved':
             return jsonify({'error': 'Only approved companies can create jobs'}), 403
-        
         # Get data from request
         data = request.get_json()
         
@@ -151,6 +157,9 @@ def create_job():
         
         db.session.add(job)
         db.session.commit()
+
+        # Clear cache since jobs list changed
+        cache_delete(f'company_jobs_{company.id}')
         
         return jsonify({
             'success': True,
@@ -184,6 +193,12 @@ def get_company_jobs():
         
         if not company:
             return jsonify({'error': 'Company not found'}), 404
+
+        # Check cache first
+        cache_key = f'company_jobs_{company.id}'
+        cached_data = cache_get(cache_key)
+        if cached_data:
+            return jsonify(cached_data), 200
         
         # Get all jobs for this company
         jobs = JobPosition.query.filter_by(company_id=company.id).all()
@@ -206,11 +221,16 @@ def get_company_jobs():
                     'posted_on': job.posted_on.isoformat()
                 })
         
-        return jsonify({
+        response_data = {
             'success': True,
             'total': len(job_list),
             'jobs': job_list
-        }), 200
+        }
+        
+        # Save to cache for 60 seconds
+        cache_set(cache_key, response_data, timeout=60)
+        
+        return jsonify(response_data), 200
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -218,7 +238,6 @@ def get_company_jobs():
 # ============================================
 # 4. VIEW APPLICANTS FOR A JOB
 # ============================================
-
 @company_bp.route('/job/<int:job_id>/applicants', methods=['GET'])
 @jwt_required()
 @role_required('company')
@@ -567,6 +586,54 @@ def send_interview_result(application_id):
                 'status': application.status,
                 'result': result,
                 'feedback': feedback
+            }
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# ============================================
+# 9. CLOSE JOB POSTING
+# ============================================
+
+@company_bp.route('/close-job/<int:job_id>', methods=['POST'])
+@jwt_required()
+@role_required('company')
+def close_job(job_id):
+    """
+    Company closes a job posting (status -> closed)
+    """
+    try:
+        user_id = get_jwt_identity()
+        company = Company.query.filter_by(user_id=int(user_id)).first()
+        
+        if not company:
+            return jsonify({'error': 'Company not found'}), 404
+        
+        job = JobPosition.query.get(job_id)
+        
+        if not job:
+            return jsonify({'error': 'Job not found'}), 404
+        
+        if job.company_id != company.id:
+            return jsonify({'error': 'You can only close your own job postings'}), 403
+        
+        if job.status == 'closed':
+            return jsonify({'error': 'Job is already closed'}), 400
+        
+        job.status = 'closed'
+        db.session.commit()
+        
+        # Clear cache since job status changed
+        cache_delete(f'company_jobs_{company.id}')
+        
+        return jsonify({
+            'success': True,
+            'message': f'Job "{job.job_title}" has been closed',
+            'job': {
+                'id': job.id,
+                'status': job.status
             }
         }), 200
     

@@ -50,6 +50,18 @@ def login():
         if not check_password_hash(user.password_hash, password):
             return jsonify({'error': 'Invalid email or password'}), 401
         
+        # Check blacklist status for students and companies
+        if user.role == UserRole.STUDENT.value:
+            student = Student.query.filter_by(user_id=user.id).first()
+            if student and student.is_blacklisted:
+                return jsonify({'error': 'Your account has been blacklisted. Contact admin.'}), 403
+
+        if user.role == UserRole.COMPANY.value:
+            company = Company.query.filter_by(user_id=user.id).first()
+            if company and company.is_blacklisted:
+                return jsonify({'error': 'Your company has been blacklisted. Contact admin.'}), 403
+        
+
         # Create JWT token (expires in 7 days)
         expires = timedelta(days=7)
         access_token = create_access_token(
