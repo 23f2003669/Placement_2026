@@ -1,7 +1,36 @@
-venv/
+backend/instance/*.db
+# Python
 __pycache__/
 *.pyc
-backend/instance/*.db
-.env
+*.pyo
+venv/
+env/
+*.egg-info/
+
+# Flask / Instance
+instance/
+*.db
+flask.log
+*.log
+
+# Celery / Redis
+celerybeat-schedule
+celerybeat.pid
+dump.rdb
+
+# Uploads (runtime user files - don't commit actual resumes)
+backend/uploads/resumes/*
+!backend/uploads/resumes/.gitkeep
+
+# Node / Vue
 node_modules/
 dist/
+.vite/
+
+# Env files (secrets)
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
