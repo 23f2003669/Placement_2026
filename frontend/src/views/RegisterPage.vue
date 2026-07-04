@@ -180,7 +180,6 @@ const register = async () => {
       JSON.stringify(response.data.user)
     )
 
-    alert('Registration successful!')
     router.push('/student/dashboard')
 
   } catch (error) {
