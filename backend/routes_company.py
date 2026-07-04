@@ -35,10 +35,12 @@ def company_dashboard():
             return jsonify({'error': 'Your company has been blacklisted'}), 403
              
 
-        # Check if company is approved
-        if company.approval_status != 'approved':
-            return jsonify({'error': 'Company not approved yet. Please wait for admin approval'}), 403
-        
+        if company.approval_status == 'pending':
+            return jsonify({'error': 'pending'}), 403
+
+        if company.approval_status == 'rejected':
+            return jsonify({'error': 'rejected'}), 403
+            
         # Count company's job positions
         total_jobs = JobPosition.query.filter_by(company_id=company.id).count()
         
