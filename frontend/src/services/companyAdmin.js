@@ -1,18 +1,9 @@
 import api from './api'
 
-export const getCompanies = async () => {
-
-  const token = localStorage.getItem('token')
-
-  const response = await api.get(
-    '/api/admin/companies',
-    {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
-  )
-
+export const getCompanies = async (search = '') => {
+  const response = await api.get('/api/admin/companies', {
+    params: { search }
+  })
   return response.data
 }
 

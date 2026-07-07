@@ -102,9 +102,13 @@ def get_all_companies():
     Only admin can access this
     """
     try:
-        # Get all companies
+        search_query = request.args.get('search', '').lower()
         companies = Company.query.all()
-        
+        if search_query:
+            companies = [c for c in companies if
+                        search_query in c.company_name.lower() or
+                        search_query in (c.industry or '').lower()]
+                
         company_list = []
         for company in companies:
             company_list.append({
@@ -442,6 +446,35 @@ def approve_job_position(job_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+# ============================================
+# 9. REJECT JOB POSITION
+# ============================================
+
+@admin_bp.route('/reject-job/<int:job_id>', methods=['POST'])
+@jwt_required()
+@role_required('admin')
+def reject_job_position(job_id):
+    try:
+        job = JobPosition.query.get(job_id)
+        if not job:
+            return jsonify({'error': 'Job position not found'}), 404
+        if job.status == 'rejected':
+            return jsonify({'error': 'Job already rejected'}), 400
+        job.status = 'rejected'
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': f'{job.job_title} rejected',
+            'job': {
+                'id': job.id,
+                'job_title': job.job_title,
+                'status': job.status
+            }
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500        
     
 # ============================================
 # 10. UNBLACKLIST STUDENT

@@ -12,8 +12,8 @@ student_bp = Blueprint('student', __name__, url_prefix='/api/student')
 
 
 def clear_student_cache(student_id):
-    # Invalidate the shared student jobs cache after a new application.
-    cache_set('available_jobs', None, timeout=1)
+    from cache import cache_delete
+    cache_delete('available_jobs')
 
 # ============================================
 # 1. STUDENT DASHBOARD
@@ -441,7 +441,9 @@ def check_export_status(task_id):
         return jsonify({'error': str(e)}), 500
 
 
-#  Resume_Upload
+# ============================================
+# 8. UPLOAD RESUME
+# ============================================
 
 @student_bp.route('/upload-resume', methods=['POST'])
 @jwt_required()

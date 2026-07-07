@@ -1,16 +1,9 @@
 import api from './api'
 
-export const getStudents = async () => {
-
-  const response = await api.get(
-    '/api/admin/students',
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    }
-  )
-
+export const getStudents = async (search = '') => {
+  const response = await api.get('/api/admin/students', {
+    params: { search }
+  })
   return response.data
 }
 

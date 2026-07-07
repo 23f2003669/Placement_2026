@@ -30,3 +30,11 @@ export const approveJob = async (id) => {
     }
   )
 }
+
+export const rejectJob = async (id) => {
+  const response = await api.post(
+    `/api/admin/reject-job/${id}`,
+    {}
+  )
+  return response.data
+}
