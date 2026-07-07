@@ -20,6 +20,7 @@
               <th>Company</th>
               <th>Industry</th>
               <th>HR Email</th>
+              <th>HR Contact</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -29,6 +30,7 @@
               <td>{{ company.company_name }}</td>
               <td>{{ company.industry }}</td>
               <td>{{ company.hr_email }}</td>
+              <td>{{ company.hr_phone }}</td>
               <td>
                 <span v-if="company.approval_status === 'approved'" class="badge bg-success">Approved</span>
                 <span v-else-if="company.approval_status === 'rejected'" class="badge bg-danger">Rejected</span>

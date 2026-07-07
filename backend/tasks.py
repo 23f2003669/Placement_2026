@@ -11,62 +11,68 @@ from io import StringIO
 @celery_app.task(name='send_daily_reminders')
 def send_daily_reminders():
     """
-    Scheduled task: Runs daily
-    Sends reminders to students about upcoming application deadlines
+    Scheduled task (daily): email each student a reminder listing upcoming
+    application deadlines (within 7 days) for eligible jobs they have not
+    yet applied to.
     """
     try:
-        from models import JobPosition
-        
-        # Get jobs with deadlines in next 7 days
+        from email_utils import send_email
+
         today = datetime.utcnow()
         week_later = today + timedelta(days=7)
-        
+
         jobs = JobPosition.query.filter(
             JobPosition.application_deadline.between(today, week_later),
             JobPosition.status == 'approved'
         ).all()
-        
-        reminder_count = 0
-        
-        for job in jobs:
-            # Get students who haven't applied yet
-            students = Student.query.all()
-            
-            for student in students:
-                # Check if student already applied
-                existing_app = Application.query.filter_by(
-                    student_id=student.id,
-                    job_position_id=job.id
-                ).first()
-                
-                if not existing_app:
-                    # Check eligibility
-                    is_eligible = True
-                    
-                    if job.min_cgpa and student.cgpa < job.min_cgpa:
-                        is_eligible = False
-                    
-                    if job.eligible_branches:
-                        branches = [b.strip() for b in job.eligible_branches.split(',')]
-                        if student.branch not in branches:
-                            is_eligible = False
-                    
-                    if is_eligible:
-                        # In real app, send email here
-                        # For now, just count
-                        reminder_count += 1
-        
+
+        students = Student.query.all()
+        emails_sent = 0
+
+        for student in students:
+            eligible_jobs = []
+            for job in jobs:
+                existing = Application.query.filter_by(
+                    student_id=student.id, job_position_id=job.id).first()
+                if existing:
+                    continue
+                if job.min_cgpa and (student.cgpa is None or student.cgpa < job.min_cgpa):
+                    continue
+                if job.eligible_branches:
+                    branches = [b.strip().lower() for b in job.eligible_branches.split(',')]
+                    if (student.branch or '').strip().lower() not in branches:
+                        continue
+                eligible_jobs.append(job)
+
+            if not eligible_jobs:
+                continue
+
+            user = User.query.get(student.user_id)
+            if not user or not user.email:
+                continue
+
+            rows = ''.join(
+                f"<li><strong>{j.job_title}</strong> - deadline "
+                f"{j.application_deadline.strftime('%d %b %Y')}</li>"
+                for j in eligible_jobs
+            )
+            html = (
+                f"<h2>Upcoming Application Deadlines</h2>"
+                f"<p>Hi {student.first_name}, these eligible jobs are closing "
+                f"soon. Apply before the deadline:</p>"
+                f"<ul>{rows}</ul>"
+                f"<p>- Placement Portal</p>"
+            )
+            if send_email(user.email, 'Placement Portal - Upcoming Deadlines', html):
+                emails_sent += 1
+
         return {
             'success': True,
-            'message': f'Daily reminders sent to {reminder_count} students',
-            'reminders_sent': reminder_count
+            'message': f'Reminder emails sent to {emails_sent} students',
+            'emails_sent': emails_sent
         }
-    
     except Exception as e:
-        return {
-            'success': False,
-            'error': str(e)
-        }
+        return {'success': False, 'error': str(e)}
 
 
 # ============================================
@@ -76,59 +82,57 @@ def send_daily_reminders():
 @celery_app.task(name='generate_monthly_report')
 def generate_monthly_report():
     """
-    Scheduled task: Runs on 1st of every month
-    Generates placement activity report for admin
+    Scheduled task (1st of month): build an HTML placement activity report
+    for the current month and email it to the admin.
     """
     try:
-        # Get current month data
+        import os
+        from email_utils import send_email
+
         today = datetime.utcnow()
-        month_start = today.replace(day=1)
-        
-        # Count this month's activities
+        month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
         applications_this_month = Application.query.filter(
-            Application.applied_on >= month_start
-        ).count()
-        
+            Application.applied_on >= month_start).count()
         placements_this_month = Placement.query.filter(
-            Placement.placed_on >= month_start
-        ).count()
-        
+            Placement.placed_on >= month_start).count()
         companies_registered = Company.query.filter(
-            Company.created_at >= month_start
-        ).count()
-        
-        # Calculate average salary
+            Company.created_at >= month_start).count()
+        total_approved_drives = JobPosition.query.filter_by(status='approved').count()
+
         placements = Placement.query.filter(
-            Placement.placed_on >= month_start
-        ).all()
-        
-        total_salary = sum([p.salary for p in placements if p.salary])
+            Placement.placed_on >= month_start).all()
+        total_salary = sum(p.salary for p in placements if p.salary)
         avg_salary = total_salary / len(placements) if placements else 0
-        
-        # Generate report
-        report = {
-            'month': today.strftime('%B %Y'),
-            'statistics': {
-                'applications_received': applications_this_month,
-                'students_selected': placements_this_month,
-                'companies_registered': companies_registered,
-                'average_salary': avg_salary,
-                'total_salary_offered': total_salary
-            },
-            'generated_on': datetime.utcnow().isoformat()
-        }
-        
+
+        html = f"""
+        <h2>Placement Activity Report - {today.strftime('%B %Y')}</h2>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;">
+            <tr><td><strong>Total approved drives</strong></td><td>{total_approved_drives}</td></tr>
+            <tr><td><strong>Applications received (this month)</strong></td><td>{applications_this_month}</td></tr>
+            <tr><td><strong>Students selected / placed (this month)</strong></td><td>{placements_this_month}</td></tr>
+            <tr><td><strong>Companies registered (this month)</strong></td><td>{companies_registered}</td></tr>
+            <tr><td><strong>Average salary</strong></td><td>{avg_salary:.2f}</td></tr>
+            <tr><td><strong>Total salary offered</strong></td><td>{total_salary}</td></tr>
+        </table>
+        <p>Generated on {today.strftime('%d %b %Y %H:%M')} UTC</p>
+        <p>- Placement Portal</p>
+        """
+
+        admin_email = os.environ.get('ADMIN_EMAIL')
+        sent = False
+        if admin_email:
+            sent = send_email(admin_email,
+                              f'Monthly Placement Report - {today.strftime("%B %Y")}',
+                              html)
+
         return {
             'success': True,
-            'message': 'Monthly report generated',
-            'report': report
+            'message': 'Monthly report generated' + (' and emailed' if sent else ' (email not sent)'),
+            'emailed': sent
         }
-    
     except Exception as e:
-        return {
-            'success': False,
-            'error': str(e)
-        }
+        return {'success': False, 'error': str(e)}
 
 
 # ============================================

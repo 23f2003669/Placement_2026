@@ -24,14 +24,7 @@ def create_app(config_name='development'):
     print("Initializing database...")
     db.init_app(app)
 
-    # Make celery app work with Flask
-    class ContextTask(celery_app.Task):
-        abstract = True
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-    
-    celery_app.Task = ContextTask
+    # Celery app-context wrapping is handled in celery_config.init_celery()
     
     # Create database tables and admin user
     init_db(app)
