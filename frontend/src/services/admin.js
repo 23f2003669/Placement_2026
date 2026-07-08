@@ -67,3 +67,7 @@ export const rejectCompany = async (id) => {
 
   return response.data
 }
+export const getAdminAnalytics = async () => {
+  const response = await api.get('/api/admin/analytics', getAuthHeader())
+  return response.data
+}

@@ -287,10 +287,12 @@
 
     </div>
 
+    <AdminCharts />
   </AdminLayout>
 </template>
 
 <script setup>
+import AdminCharts from '../../components/AdminCharts.vue'
 import { ref, onMounted } from 'vue'
 import AdminLayout from '../../layouts/AdminLayout.vue'
 

@@ -15,23 +15,25 @@ export const shortlistStudent = async (applicationId) => {
   return response.data
 }
 
-export const rejectApplication = async (applicationId) => {
-  const response = await api.post(`/api/company/reject-application/${applicationId}`, {})
+export const rejectApplication = async (applicationId, feedback = null) => {
+  const response = await api.post(`/api/company/reject-application/${applicationId}`, { feedback })
   return response.data
 }
 
-export const scheduleInterview = async (applicationId, interviewDate) => {
+export const scheduleInterview = async (applicationId, interviewDate, interviewLink = null) => {
   const response = await api.post(`/api/company/schedule-interview/${applicationId}`, {
-    interview_date: interviewDate
+    interview_date: interviewDate,
+    interview_link: interviewLink
   })
   return response.data
 }
 
-export const sendResult = async (applicationId, result, salary = null, joiningDate = null) => {
+export const sendResult = async (applicationId, result, salary = null, joiningDate = null, feedback = null) => {
   const response = await api.post(`/api/company/send-result/${applicationId}`, {
     result,
     salary,
-    joining_date: joiningDate
+    joining_date: joiningDate,
+    feedback
   })
   return response.data
 }

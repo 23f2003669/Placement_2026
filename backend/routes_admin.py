@@ -688,3 +688,39 @@ def get_all_placements():
         return jsonify({'error': str(e)}), 500
     
     
+
+# ============================================
+# ANALYTICS - aggregated data for dashboard charts
+# ============================================
+
+@admin_bp.route('/analytics', methods=['GET'])
+@jwt_required()
+@role_required('admin')
+def admin_analytics():
+    """Aggregated counts for admin dashboard charts."""
+    try:
+        status_rows = db.session.query(
+            Application.status, func.count(Application.id)
+        ).group_by(Application.status).all()
+        application_status = {str(s): c for s, c in status_rows}
+
+        branch_rows = db.session.query(
+            Student.branch, func.count(Student.id)
+        ).group_by(Student.branch).all()
+        students_by_branch = {(b or 'Unknown'): c for b, c in branch_rows}
+
+        job_rows = db.session.query(
+            JobPosition.status, func.count(JobPosition.id)
+        ).group_by(JobPosition.status).all()
+        jobs_by_status = {str(s): c for s, c in job_rows}
+
+        return jsonify({
+            'success': True,
+            'analytics': {
+                'application_status': application_status,
+                'students_by_branch': students_by_branch,
+                'jobs_by_status': jobs_by_status
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
