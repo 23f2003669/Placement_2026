@@ -232,3 +232,38 @@ class Admin(db.Model):
     
     def __repr__(self):
         return f'<Admin {self.name}>'
+
+
+# ============================================
+# Cache invalidation via SQLAlchemy events
+# When Company / Student / JobPosition data changes, drop the related cache
+# so the next read rebuilds a fresh copy. Wrapped in try/except so a Redis
+# outage never breaks a database write.
+# ============================================
+from sqlalchemy import event as _sa_event
+from cache import cache_delete as _cache_delete
+
+
+def _safe_delete(key):
+    try:
+        _cache_delete(key)
+    except Exception:
+        pass
+
+
+def _invalidate_companies(mapper, connection, target):
+    _safe_delete('admin_all_companies')
+
+
+def _invalidate_students(mapper, connection, target):
+    _safe_delete('admin_all_students')
+
+
+def _invalidate_jobs(mapper, connection, target):
+    _safe_delete('available_jobs_raw')
+
+
+for _evt in ('after_insert', 'after_update', 'after_delete'):
+    _sa_event.listen(Company, _evt, _invalidate_companies)
+    _sa_event.listen(Student, _evt, _invalidate_students)
+    _sa_event.listen(JobPosition, _evt, _invalidate_jobs)

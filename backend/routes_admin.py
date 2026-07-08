@@ -98,38 +98,42 @@ def admin_dashboard():
 @role_required('admin')
 def get_all_companies():
     """
-    Get list of all companies with their details and approval status
-    Only admin can access this
+    List all companies (admin). Raw list cached for 5 minutes; the search
+    filter is applied on the cached list each request.
     """
     try:
         search_query = request.args.get('search', '').lower()
-        companies = Company.query.all()
+
+        company_list = cache_get('admin_all_companies')
+        if company_list is None:
+            companies = Company.query.all()
+            company_list = []
+            for company in companies:
+                company_list.append({
+                    'id': company.id,
+                    'company_name': company.company_name,
+                    'industry': company.industry,
+                    'website': company.website,
+                    'hr_email': company.hr_email,
+                    'hr_phone': company.hr_phone,
+                    'location': company.location,
+                    'approval_status': company.approval_status,
+                    'is_blacklisted': company.is_blacklisted,
+                    'created_at': company.created_at.isoformat()
+                })
+            cache_set('admin_all_companies', company_list, timeout=300)
+
         if search_query:
-            companies = [c for c in companies if
-                        search_query in c.company_name.lower() or
-                        search_query in (c.industry or '').lower()]
-                
-        company_list = []
-        for company in companies:
-            company_list.append({
-                'id': company.id,
-                'company_name': company.company_name,
-                'industry': company.industry,
-                'website': company.website,
-                'hr_email': company.hr_email,
-                'hr_phone': company.hr_phone,
-                'location': company.location,
-                'approval_status': company.approval_status,
-                'is_blacklisted': company.is_blacklisted,
-                'created_at': company.created_at.isoformat()
-            })
-        
+            company_list = [c for c in company_list if
+                            search_query in c['company_name'].lower() or
+                            search_query in (c['industry'] or '').lower()]
+
         return jsonify({
             'success': True,
             'total': len(company_list),
             'companies': company_list
         }), 200
-    
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
@@ -225,46 +229,45 @@ def reject_company(company_id):
 @role_required('admin')
 def get_all_students():
     """
-    Get list of all students with their details
-    Only admin can access this
+    List all students (admin). Raw list cached for 5 minutes; the search
+    filter is applied on the cached list each request.
     """
     try:
-        # Get search query from URL params (optional)
         search_query = request.args.get('search', '').lower()
-        
-        # Get all students
-        students = Student.query.all()
-        
-        # Filter by search if provided
+
+        student_list = cache_get('admin_all_students')
+        if student_list is None:
+            students = Student.query.all()
+            student_list = []
+            for student in students:
+                user = User.query.get(student.user_id)
+                student_list.append({
+                    'id': student.id,
+                    'user_id': student.user_id,
+                    'first_name': student.first_name,
+                    'last_name': student.last_name,
+                    'email': user.email if user else None,
+                    'roll_number': student.roll_number,
+                    'branch': student.branch,
+                    'year': student.year,
+                    'cgpa': student.cgpa,
+                    'is_blacklisted': student.is_blacklisted,
+                    'created_at': student.created_at.isoformat()
+                })
+            cache_set('admin_all_students', student_list, timeout=300)
+
         if search_query:
-            students = [s for s in students if 
-                       search_query in s.first_name.lower() or 
-                       search_query in s.last_name.lower() or
-                       search_query in (s.roll_number or '').lower()]
-        
-        student_list = []
-        for student in students:
-            user = User.query.get(student.user_id)
-            student_list.append({
-                'id': student.id,
-                'user_id': student.user_id,
-                'first_name': student.first_name,
-                'last_name': student.last_name,
-                'email': user.email if user else None,
-                'roll_number': student.roll_number,
-                'branch': student.branch,
-                'year': student.year,
-                'cgpa': student.cgpa,
-                'is_blacklisted': student.is_blacklisted,
-                'created_at': student.created_at.isoformat()
-            })
-        
+            student_list = [s for s in student_list if
+                            search_query in s['first_name'].lower() or
+                            search_query in (s['last_name'] or '').lower() or
+                            search_query in (s['roll_number'] or '').lower()]
+
         return jsonify({
             'success': True,
             'total': len(student_list),
             'students': student_list
         }), 200
-    
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
