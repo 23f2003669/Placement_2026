@@ -184,11 +184,9 @@ const register = async () => {
 
   } catch (error) {
     console.error(error)
-    alert(
-      error.response?.data?.error ||
+    alert(error.response?.data?.error ||
       error.message ||
-      'Registration Failed'
-    )
+      'Registration Failed')
   } finally {
     loading.value = false
   }

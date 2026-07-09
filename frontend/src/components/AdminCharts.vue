@@ -43,7 +43,7 @@ const loading = ref(true)
 const analytics = ref({ application_status: {}, students_by_branch: {}, jobs_by_status: {} })
 
 const palette = ['#4e73df', '#1cc88a', '#f6c23e', '#e74a3b', '#36b9cc', '#858796']
-const pieOptions = { responsive: true, plugins: { legend: { position: 'bottom' } } }
+const pieOptions = { responsive: true, maintainAspectRatio: true, aspectRatio: 1.4, plugins: { legend: { position: 'bottom' } }, cutout: '58%' }
 const barOptions = {
   responsive: true,
   plugins: { legend: { display: false } },

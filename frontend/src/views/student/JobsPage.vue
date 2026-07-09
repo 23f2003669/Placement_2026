@@ -44,7 +44,7 @@
 
           <p class="mb-1" v-if="job.salary_min || job.salary_max">
             <strong>Salary:</strong>
-            {{ job.salary_min || '?' }} - {{ job.salary_max || '?' }}
+            {{ formatSalaryRange(job.salary_min, job.salary_max) }}
           </p>
 
           <p class="mb-1" v-if="job.min_cgpa">
@@ -97,6 +97,7 @@
 import { ref, computed, onMounted } from 'vue'
 import StudentLayout from '../../layouts/StudentLayout.vue'
 import { getJobs, getMyApplications, applyJob } from '../../services/student'
+import { formatSalaryRange } from '../../utils/format'
 
 const jobs = ref([])
 const appliedJobIds = ref([])

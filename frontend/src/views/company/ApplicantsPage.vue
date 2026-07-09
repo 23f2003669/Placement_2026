@@ -15,8 +15,8 @@
               <th>Email</th>
               <th>Branch</th>
               <th>CGPA</th>
-              <th>Resume</th>
               <th>Status</th>
+              <th>Profile</th>
               <th>Feedback</th>
               <th>Actions</th>
             </tr>
@@ -28,13 +28,6 @@
               <td>{{ applicant.branch }}</td>
               <td>{{ applicant.cgpa }}</td>
               <td>
-                <a v-if="applicant.resume_url"
-                  :href="`http://127.0.0.1:5000${applicant.resume_url}`"
-                  target="_blank"
-                  class="btn btn-outline-primary btn-sm">View</a>
-                <span v-else class="text-muted small">None</span>
-              </td>
-              <td>
                 <span class="badge" :class="{
                   'bg-primary': applicant.application_status === 'applied',
                   'bg-warning text-dark': applicant.application_status === 'shortlisted',
@@ -42,6 +35,9 @@
                   'bg-success': applicant.application_status === 'selected',
                   'bg-danger': applicant.application_status === 'rejected'
                 }">{{ applicant.application_status }}</span>
+              </td>
+              <td>
+                <button class="btn btn-outline-primary btn-sm" @click="openProfile(applicant)">View</button>
               </td>
               <td class="small text-muted" style="max-width:200px">
                 {{ applicant.company_feedback || '-' }}
@@ -152,6 +148,44 @@
       </div>
     </div>
 
+    <!-- Student Profile Modal -->
+    <div v-if="showProfileModal" class="modal fade show d-block" style="background:rgba(0,0,0,0.5)">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Student Profile</h5>
+            <button class="btn-close" @click="showProfileModal = false"></button>
+          </div>
+          <div class="modal-body" v-if="profileData">
+            <div class="d-flex align-items-center gap-4 mb-4 flex-wrap">
+              <img v-if="profileData.profile_pic" :src="`http://127.0.0.1:5000${profileData.profile_pic}`"
+                   class="rounded-circle" style="width:90px;height:90px;object-fit:cover;border:3px solid #e8eaf0" />
+              <div v-else class="rounded-circle d-flex align-items-center justify-content-center"
+                   style="width:90px;height:90px;background:#4f46e5;color:#fff;font-size:1.8rem;font-weight:600">
+                {{ (profileData.student_name || '?')[0] }}
+              </div>
+              <div>
+                <h4 class="mb-1">{{ profileData.student_name }}</h4>
+                <p class="text-muted mb-0">{{ profileData.branch }} &middot; Year {{ profileData.year }}</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-2"><strong>Email:</strong> {{ profileData.email }}</div>
+              <div class="col-md-6 mb-2"><strong>Roll Number:</strong> {{ profileData.roll_number || '-' }}</div>
+              <div class="col-md-6 mb-2"><strong>Phone:</strong> {{ profileData.phone || '-' }}</div>
+              <div class="col-md-6 mb-2"><strong>CGPA:</strong> {{ profileData.cgpa }}</div>
+              <div class="col-12 mb-2"><strong>Bio:</strong> {{ profileData.bio || '-' }}</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <a v-if="profileData && profileData.resume_url" :href="`http://127.0.0.1:5000${profileData.resume_url}`"
+               target="_blank" class="btn btn-outline-primary">View Resume</a>
+            <button class="btn btn-secondary" @click="showProfileModal = false">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </CompanyLayout>
 </template>
 
@@ -167,12 +201,19 @@ const loading = ref(true)
 const showInterviewModal = ref(false)
 const showSelectModal = ref(false)
 const showRejectModal = ref(false)
+const showProfileModal = ref(false)
+const profileData = ref(null)
 const selectedInterviewApplicationId = ref(null)
 const selectedApplicationId = ref(null)
 const rejectApplicationId = ref(null)
 const rejectFeedback = ref('')
 const interviewForm = ref({ date: '', time: '', link: '' })
 const selectedForm = ref({ salary: '', joining_date: '', feedback: '' })
+
+const openProfile = (applicant) => {
+  profileData.value = applicant
+  showProfileModal.value = true
+}
 
 const loadApplicants = async () => {
   try {

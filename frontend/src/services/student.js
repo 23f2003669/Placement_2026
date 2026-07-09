@@ -63,3 +63,18 @@ export const getExportStatus = async (taskId) => {
   const response = await api.get(`/api/student/export-status/${taskId}`)
   return response.data
 }
+export const uploadPhoto = async (file) => {
+  const formData = new FormData()
+  formData.append('photo', file)
+  const response = await api.post('/api/student/upload-photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+  return response.data
+}
+
+export const downloadOfferLetter = async (placementId) => {
+  const response = await api.get(`/api/student/placement/${placementId}/offer-letter`, {
+    responseType: 'blob'
+  })
+  return response.data
+}

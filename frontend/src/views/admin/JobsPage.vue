@@ -29,7 +29,7 @@
 
               <td>{{ job.job_title }}</td>
               <td>{{ job.company_name }}</td>
-              <td>₹{{ job.salary_min || 0 }} - ₹{{ job.salary_max || 0 }}</td>
+              <td>{{ formatSalaryRange(job.salary_min, job.salary_max) }}</td>
 
               <td>
                 <span
@@ -83,6 +83,7 @@
 </template>
 
 <script setup>
+import { formatSalaryRange } from '../../utils/format'
 import { ref, onMounted } from 'vue'
 import AdminLayout from '../../layouts/AdminLayout.vue'
 import { getJobs, approveJob, rejectJob } from '../../services/jobAdmin'

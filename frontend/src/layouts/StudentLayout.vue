@@ -2,75 +2,30 @@
   <div class="d-flex">
 
     <!-- Sidebar -->
-    <div
-      class="bg-primary text-white p-3"
-      style="width:280px; min-height:100vh"
-    >
+    <div class="text-white p-3 d-flex flex-column"
+         style="width:260px;min-height:100vh;background:linear-gradient(180deg,#4f46e5 0%,#4338ca 55%,#3730a3 100%)">
 
-      <h3 class="mb-4">
-        Student Portal
-      </h3>
+      <div class="d-flex align-items-center gap-2 mb-4 px-2 pt-2">
+        <i class="bi bi-mortarboard-fill" style="font-size:1.6rem"></i>
+        <h4 class="mb-0 fw-bold" style="color:#fff">Student Portal</h4>
+      </div>
 
-      <ul class="nav flex-column">
-
-        <li class="nav-item mb-2">
-          <router-link
-            to="/student/dashboard"
-            class="nav-link text-white"
-          >
-            Dashboard
+      <ul class="nav flex-column flex-grow-1">
+        <li class="nav-item mb-1" v-for="item in navItems" :key="item.to">
+          <router-link :to="item.to" class="nav-link text-white d-flex align-items-center gap-2">
+            <i :class="item.icon" style="width:20px"></i>
+            <span>{{ item.label }}</span>
           </router-link>
         </li>
-
-        <li class="nav-item mb-2">
-          <router-link
-            to="/student/jobs"
-            class="nav-link text-white"
-          >
-            Available Jobs
-          </router-link>
-        </li>
-
-        <li class="nav-item mb-2">
-          <router-link
-            to="/student/applications"
-            class="nav-link text-white"
-          >
-            My Applications
-          </router-link>
-        </li>
-
-        <li class="nav-item mb-2">
-          <router-link
-            to="/student/placements"
-            class="nav-link text-white"
-          >
-            Placements
-          </router-link>
-        </li>
-
-        <li class="nav-item mb-2">
-          <router-link
-            to="/student/profile"
-            class="nav-link text-white"
-          >
-            Profile
-          </router-link>
-        </li>
-
       </ul>
 
-      <button
-        class="btn btn-danger w-100 mt-4"
-        @click="logout"
-      >
-        Logout
+      <button class="btn btn-danger w-100" @click="logout">
+        <i class="bi bi-box-arrow-right me-1"></i> Logout
       </button>
 
     </div>
 
     <!-- Main Content -->
-
     <div class="flex-grow-1 p-4">
       <slot />
     </div>
@@ -82,6 +37,14 @@
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
+const navItems = [
+  { to: '/student/dashboard', label: 'Dashboard', icon: 'bi bi-speedometer2' },
+  { to: '/student/jobs', label: 'Available Jobs', icon: 'bi bi-briefcase' },
+  { to: '/student/applications', label: 'My Applications', icon: 'bi bi-file-earmark-text' },
+  { to: '/student/placements', label: 'Placements', icon: 'bi bi-award' },
+  { to: '/student/profile', label: 'Profile', icon: 'bi bi-person' }
+]
 
 const logout = () => {
   localStorage.removeItem('token')

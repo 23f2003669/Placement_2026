@@ -1,417 +1,122 @@
 <template>
   <AdminLayout>
-
-    <h1 class="mb-4">
-      Admin Dashboard
-    </h1>
-
-    <!-- Stats -->
-
-    <div class="row g-4 mb-4">
-
-      <div class="col-md-3">
-        <div class="card shadow border-0">
-          <div class="card-body text-center">
-            <h2>{{ stats.students }}</h2>
-            <p class="text-muted mb-0">
-              Students
-            </p>
+    <div v-if="loading" class="text-muted">Loading dashboard...</div>
+    <div v-else>
+      <!-- Welcome banner -->
+      <div class="card shadow border-0 p-4 mb-4"
+           style="background:linear-gradient(120deg,#7c3aed,#8b5cf6);color:#fff">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                 style="width:72px;height:72px;background:rgba(255,255,255,.25);font-size:1.6rem">
+              <i class="bi bi-shield-lock"></i>
+            </div>
+            <div>
+              <h3 class="mb-1" style="color:#fff">Admin Dashboard</h3>
+              <p class="mb-0" style="opacity:.9">Institute Placement Cell &middot; Overview</p>
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <router-link to="/admin/companies" class="btn btn-light btn-sm fw-semibold">
+              <i class="bi bi-building me-1"></i>Companies
+            </router-link>
+            <router-link to="/admin/students" class="btn btn-outline-light btn-sm fw-semibold">
+              <i class="bi bi-mortarboard me-1"></i>Students
+            </router-link>
           </div>
         </div>
       </div>
 
-      <div class="col-md-3">
-        <div class="card shadow border-0">
-          <div class="card-body text-center">
-            <h2>{{ stats.companies }}</h2>
-            <p class="text-muted mb-0">
-              Companies
-            </p>
+      <!-- Stat cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3" v-for="s in statCards" :key="s.label">
+          <div class="card shadow border-0 p-3 h-100 stat-card">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded d-flex align-items-center justify-content-center"
+                   :style="`width:48px;height:48px;background:${s.bg};color:${s.color};font-size:1.4rem`">
+                <i :class="s.icon"></i>
+              </div>
+              <div>
+                <h4 class="mb-0">{{ s.value }}</h4>
+                <small class="text-muted">{{ s.label }}</small>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="col-md-3">
-        <div class="card shadow border-0">
-          <div class="card-body text-center">
-            <h2>{{ stats.applications }}</h2>
-            <p class="text-muted mb-0">
-              Applications
-            </p>
-          </div>
+      <!-- Pending Approvals -->
+      <div class="row g-3 mb-4" v-if="pendingCompanies || pendingJobs">
+        <div class="col-md-6" v-if="pendingCompanies">
+          <router-link to="/admin/companies" class="text-decoration-none">
+            <div class="card border-0 p-3 pending-card" style="background:#fffbeb;border-left:4px solid #f59e0b !important">
+              <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-hourglass-split" style="font-size:1.6rem;color:#f59e0b"></i>
+                <div>
+                  <h5 class="mb-0" style="color:#92400e">{{ pendingCompanies }} Company registration(s) pending</h5>
+                  <small class="text-muted">Click to review and approve</small>
+                </div>
+              </div>
+            </div>
+          </router-link>
+        </div>
+        <div class="col-md-6" v-if="pendingJobs">
+          <router-link to="/admin/jobs" class="text-decoration-none">
+            <div class="card border-0 p-3 pending-card" style="background:#fffbeb;border-left:4px solid #f59e0b !important">
+              <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-hourglass-split" style="font-size:1.6rem;color:#f59e0b"></i>
+                <div>
+                  <h5 class="mb-0" style="color:#92400e">{{ pendingJobs }} Job posting(s) pending</h5>
+                  <small class="text-muted">Click to review and approve</small>
+                </div>
+              </div>
+            </div>
+          </router-link>
         </div>
       </div>
 
-      <div class="col-md-3">
-        <div class="card shadow border-0">
-          <div class="card-body text-center">
-            <h2>{{ stats.placements }}</h2>
-            <p class="text-muted mb-0">
-              Placements
-            </p>
-          </div>
-        </div>
-      </div>
-
+      <!-- Charts -->
+      <AdminCharts />
     </div>
-
-    <!-- Pending Companies -->
-
-    <div
-      v-if="pendingCompanies.length > 0"
-      class="card shadow border-0 mb-4"
-    >
-
-      <div class="card-header bg-white">
-        <h5 class="mb-0">
-          Pending Company Approvals
-        </h5>
-      </div>
-
-      <div class="card-body">
-
-        <table class="table">
-
-          <thead>
-            <tr>
-              <th>Company</th>
-              <th>Industry</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            <tr
-              v-for="company in pendingCompanies"
-              :key="company.id"
-            >
-
-              <td>
-                {{ company.company_name }}
-              </td>
-
-              <td>
-                {{ company.industry }}
-              </td>
-
-              <td>
-
-                <button
-                  class="btn btn-success btn-sm me-2"
-                  @click="handleApprove(company.id)"
-                >
-                  Approve
-                </button>
-
-                <button
-                  class="btn btn-danger btn-sm"
-                  @click="handleReject(company.id)"
-                >
-                  Reject
-                </button>
-
-              </td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-
-    <!-- Recent Companies -->
-
-    <div class="card shadow border-0 mb-4">
-
-      <div class="card-header bg-white">
-        <h5 class="mb-0">
-          Recent Companies
-        </h5>
-      </div>
-
-      <div class="card-body">
-
-        <table class="table">
-
-          <thead>
-            <tr>
-              <th>Company</th>
-              <th>Industry</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            <tr
-              v-for="company in recentCompanies"
-              :key="company.id"
-            >
-
-              <td>{{ company.company_name }}</td>
-
-              <td>{{ company.industry }}</td>
-
-              <td>
-
-                <span
-                  v-if="company.approval_status === 'approved'"
-                  class="badge bg-success"
-                >
-                  Approved
-                </span>
-
-                <span
-                  v-else-if="company.approval_status === 'rejected'"
-                  class="badge bg-danger"
-                >
-                  Rejected
-                </span>
-
-                <span
-                  v-else
-                  class="badge bg-warning text-dark"
-                >
-                  Pending
-                </span>
-
-              </td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-
-    <!-- Recent Students -->
-
-    <div class="card shadow border-0 mb-4">
-
-      <div class="card-header bg-white">
-        <h5 class="mb-0">
-          Recent Students
-        </h5>
-      </div>
-
-      <div class="card-body">
-
-        <table class="table">
-
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Branch</th>
-              <th>CGPA</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            <tr
-              v-for="student in recentStudents"
-              :key="student.id"
-            >
-
-              <td>
-                {{ student.first_name }}
-                {{ student.last_name }}
-              </td>
-
-              <td>{{ student.branch }}</td>
-
-              <td>{{ student.cgpa }}</td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-
-    <!-- Recent Applications -->
-
-    <div class="card shadow border-0">
-
-      <div class="card-header bg-white">
-        <h5 class="mb-0">
-          Recent Applications
-        </h5>
-      </div>
-
-      <div class="card-body">
-
-        <table class="table">
-
-          <thead>
-            <tr>
-              <th>Student</th>
-              <th>Company</th>
-              <th>Job</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            <tr
-              v-for="application in recentApplications"
-              :key="application.application_id"
-            >
-
-              <td>{{ application.student_name }}</td>
-
-              <td>{{ application.company_name }}</td>
-
-              <td>{{ application.job_title }}</td>
-
-              <td>{{ application.status }}</td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-
-    <AdminCharts />
   </AdminLayout>
 </template>
 
 <script setup>
-import AdminCharts from '../../components/AdminCharts.vue'
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import AdminLayout from '../../layouts/AdminLayout.vue'
+import AdminCharts from '../../components/AdminCharts.vue'
+import { getDashboardStats } from '../../services/admin'
 
-import {
-  getDashboardStats,
-  getCompanies,
-  getStudents,
-  getApplications,
-  approveCompany,
-  rejectCompany
-} from '../../services/admin'
+const loading = ref(true)
+const data = ref({})
 
-const stats = ref({
-  students: 0,
-  companies: 0,
-  applications: 0,
-  placements: 0
-})
+const pendingCompanies = computed(() => data.value.companies?.pending || 0)
+const pendingJobs = computed(() => data.value.job_positions?.pending || 0)
 
-const recentCompanies = ref([])
-const recentStudents = ref([])
-const recentApplications = ref([])
-const pendingCompanies = ref([])
+const statCards = computed(() => [
+  { label: 'Students', value: data.value.students?.total || 0, icon: 'bi bi-mortarboard', bg: '#f5f3ff', color: '#7c3aed' },
+  { label: 'Companies', value: data.value.companies?.total || 0, icon: 'bi bi-building', bg: '#eef2ff', color: '#4f46e5' },
+  { label: 'Jobs', value: data.value.job_positions?.total || 0, icon: 'bi bi-briefcase', bg: '#ecfdf5', color: '#059669' },
+  { label: 'Applications', value: data.value.applications?.total || 0, icon: 'bi bi-file-earmark-text', bg: '#eff6ff', color: '#3b82f6' }
+])
 
-const loadDashboard = async () => {
-
+const load = async () => {
+  loading.value = true
   try {
-
-    const dashboard =
-      await getDashboardStats()
-
-    stats.value.students =
-      dashboard.data.students.total
-
-    stats.value.companies =
-      dashboard.data.companies.total
-
-    stats.value.applications =
-      dashboard.data.applications.total
-
-    stats.value.placements =
-      dashboard.data.placements.total
-
-    const companiesResponse =
-      await getCompanies()
-
-    recentCompanies.value =
-      companiesResponse.companies.slice(0, 5)
-
-    pendingCompanies.value =
-      companiesResponse.companies.filter(
-        company =>
-          company.approval_status === 'pending'
-      )
-
-    const studentsResponse =
-      await getStudents()
-
-    recentStudents.value =
-      studentsResponse.students.slice(0, 5)
-
-    const applicationsResponse =
-      await getApplications()
-
-    recentApplications.value =
-      applicationsResponse.applications.slice(0, 5)
-
-  }
-
-  catch (error) {
-
-    console.error(
-      'Dashboard Error:',
-      error
-    )
-
-  }
-
+    const res = await getDashboardStats()
+    data.value = res.data || res
+  } catch (e) { console.error('admin dashboard error', e) }
+  finally { loading.value = false }
 }
 
-const handleApprove = async (id) => {
-
-  try {
-
-    await approveCompany(id)
-
-    await loadDashboard()
-
-  }
-
-  catch (error) {
-
-    console.error(error)
-
-  }
-
-}
-
-const handleReject = async (id) => {
-
-  try {
-
-    await rejectCompany(id)
-
-    await loadDashboard()
-
-  }
-
-  catch (error) {
-
-    console.error(error)
-
-  }
-
-}
-
-onMounted(() => {
-
-  loadDashboard()
-
-})
+onMounted(() => load())
 </script>
+
+<style scoped>
+.stat-card { transition: transform .18s ease, box-shadow .18s ease; }
+.stat-card:hover { transform: translateY(-4px); }
+.pending-card { border-radius: 12px; transition: transform .18s ease, box-shadow .18s ease; }
+.pending-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(245,158,11,.2); }
+.pending-card { border-radius: 12px; transition: transform .18s ease, box-shadow .18s ease; }
+.pending-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(245,158,11,.2); }
+</style>

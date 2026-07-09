@@ -2,63 +2,29 @@
   <div class="d-flex">
 
     <!-- Sidebar -->
-    <div
-      class="bg-success text-white p-3"
-      style="width:280px;min-height:100vh;"
-    >
+    <div class="text-white p-3 d-flex flex-column"
+         style="width:260px;min-height:100vh;background:linear-gradient(180deg,#059669 0%,#047857 55%,#065f46 100%)">
 
-      <h3 class="mb-4">
-        Placement Portal
-      </h3>
+      <div class="d-flex align-items-center gap-2 mb-1 px-2 pt-2">
+        <i class="bi bi-building" style="font-size:1.6rem"></i>
+        <h4 class="mb-0 fw-bold" style="color:#fff">Placement Portal</h4>
+      </div>
+      <p class="small px-2 mb-4" style="opacity:.75">Company Portal</p>
 
-      <p class="small text-light">
-        Company Portal
-      </p>
-
-      <ul class="nav flex-column">
-
-        <li class="nav-item mb-2">
-          <router-link
-            to="/company/dashboard"
-            class="nav-link text-white"
-          >
-            <i class="bi bi-speedometer2 me-2"></i>
-            Dashboard
+      <ul class="nav flex-column flex-grow-1">
+        <li class="nav-item mb-1" v-for="item in navItems" :key="item.to">
+          <router-link :to="item.to" class="nav-link text-white d-flex align-items-center gap-2">
+            <i :class="item.icon" style="width:20px"></i>
+            <span>{{ item.label }}</span>
           </router-link>
         </li>
-
-        <li class="nav-item mb-2">
-          <router-link
-            to="/company/jobs"
-            class="nav-link text-white"
-          >
-            <i class="bi bi-briefcase me-2"></i>
-            My Jobs
-          </router-link>
-        </li>
-
-        <li class="nav-item mb-2">
-          <router-link
-            to="/company/create-job"
-            class="nav-link text-white"
-          >
-            <i class="bi bi-plus-circle me-2"></i>
-            Create Job
-          </router-link>
-        </li>
-
       </ul>
 
-      <button
-        class="btn btn-danger w-100 mt-4"
-        @click="logout"
-      >
-        Logout
+      <button class="btn btn-danger w-100" @click="logout">
+        <i class="bi bi-box-arrow-right me-1"></i> Logout
       </button>
 
     </div>
-
-    <!-- Main Content -->
 
     <div class="flex-grow-1 p-4">
       <slot />
@@ -69,8 +35,13 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-
 const router = useRouter()
+
+const navItems = [
+  { to: '/company/dashboard', label: 'Dashboard', icon: 'bi bi-speedometer2' },
+  { to: '/company/jobs', label: 'My Jobs', icon: 'bi bi-briefcase' },
+  { to: '/company/create-job', label: 'Create Job', icon: 'bi bi-plus-circle' }
+]
 
 const logout = () => {
   localStorage.removeItem('token')

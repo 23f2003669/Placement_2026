@@ -24,7 +24,7 @@
               <td>{{ placement.student_name }}</td>
               <td>{{ placement.company_name }}</td>
               <td>{{ placement.job_title }}</td>
-              <td>₹{{ placement.salary }}</td>
+              <td>{{ formatSalary(placement.salary) }}</td>
               <td>
                 <span class="badge bg-success">{{ placement.status }}</span>
               </td>
@@ -41,6 +41,7 @@
 </template>
 
 <script setup>
+import { formatSalary } from '../../utils/format'
 import { ref, onMounted } from 'vue'
 import AdminLayout from '../../layouts/AdminLayout.vue'
 import { getPlacements } from '../../services/placementAdmin'

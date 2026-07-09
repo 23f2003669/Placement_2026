@@ -25,7 +25,7 @@
               <td>{{ job.job_title }}</td>
               <td>{{ job.location || 'N/A' }}</td>
               <td>{{ job.job_type || 'N/A' }}</td>
-              <td>₹{{ job.salary_min || 0 }} - ₹{{ job.salary_max || 0 }}</td>
+              <td>{{ formatSalaryRange(job.salary_min, job.salary_max) }}</td>
               <td>
                 <span class="badge" :class="{
                   'bg-success': job.status === 'approved',
@@ -56,6 +56,7 @@
 </template>
 
 <script setup>
+import { formatSalaryRange } from '../../utils/format'
 import { ref, onMounted } from 'vue'
 import CompanyLayout from '../../layouts/CompanyLayout.vue'
 import { getMyJobs, closeJob } from '../../services/company'

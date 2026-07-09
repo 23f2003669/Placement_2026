@@ -1,8 +1,6 @@
 <template>
-  <div
-    class="min-vh-100 d-flex align-items-center justify-content-center"
-    style="background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);"
-  >
+  <div class="min-vh-100 d-flex align-items-center justify-content-center"
+       style="background: linear-gradient(135deg, #4f46e5 0%, #6610f2 100%);">
     <div class="col-md-4 col-sm-10 col-11">
       <div class="card border-0 shadow-lg rounded-3">
         <div class="card-body p-4 p-md-5">
@@ -14,58 +12,31 @@
           </div>
 
           <form @submit.prevent="login">
-
             <div class="mb-3">
               <label class="form-label fw-semibold">Email</label>
-              <input
-                type="email"
-                class="form-control form-control-lg"
-                placeholder="Enter your email"
-                v-model="email"
-                required
-                autocomplete="email"
-              />
+              <input type="email" class="form-control form-control-lg"
+                     placeholder="Enter your email" v-model="email" required autocomplete="email" />
             </div>
-
             <div class="mb-4">
               <label class="form-label fw-semibold">Password</label>
-              <input
-                type="password"
-                class="form-control form-control-lg"
-                placeholder="Enter your password"
-                v-model="password"
-                required
-                autocomplete="current-password"
-              />
+              <input type="password" class="form-control form-control-lg"
+                     placeholder="Enter your password" v-model="password" required autocomplete="current-password" />
             </div>
-
-            <button
-              type="submit"
-              class="btn btn-primary btn-lg w-100"
-              :disabled="loading"
-            >
-              <span
-                v-if="loading"
-                class="spinner-border spinner-border-sm me-2"
-              ></span>
+            <button type="submit" class="btn btn-primary btn-lg w-100" :disabled="loading">
+              <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
               {{ loading ? 'Signing in...' : 'Login' }}
             </button>
-
           </form>
 
           <hr class="my-4" />
 
           <div class="text-center small">
             <span class="text-muted">New student? </span>
-            <router-link to="/register" class="text-primary fw-semibold">
-              Register here
-            </router-link>
+            <router-link to="/register" class="text-primary fw-semibold">Register here</router-link>
           </div>
           <div class="text-center small mt-2">
             <span class="text-muted">Registering a company? </span>
-            <router-link to="/register-company" class="text-primary fw-semibold">
-              Company registration
-            </router-link>
+            <router-link to="/register-company" class="text-primary fw-semibold">Company registration</router-link>
           </div>
 
         </div>
@@ -101,10 +72,7 @@ const login = async () => {
     else if (role === 'company') router.push('/company/dashboard')
 
   } catch (error) {
-    alert(
-      error.response?.data?.error ||
-      'Login failed. Check your credentials.'
-    )
+    alert(error.response?.data?.error || 'Invalid email or password')
   } finally {
     loading.value = false
   }

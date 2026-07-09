@@ -130,12 +130,11 @@ const registerCompany = async () => {
       form.value
     )
 
-    alert(response.data.message)
-    router.push('/login')
+    alert(response.data.message || 'Registration successful! Please wait for admin approval.')
+    setTimeout(() => router.push('/login'), 1600)
 
   } catch (error) {
-    alert(
-      error.response?.data?.error ||
+    alert(error.response?.data?.error ||
       'Registration failed'
     )
   } finally {
