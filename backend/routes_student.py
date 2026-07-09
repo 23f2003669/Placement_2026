@@ -43,7 +43,8 @@ def student_dashboard():
                     'roll_number': student.roll_number,
                     'branch': student.branch,
                     'year': student.year,
-                    'cgpa': student.cgpa
+                    'cgpa': student.cgpa,
+                    'profile_pic': student.profile_pic
                 },
                 'statistics': {
                     'total_applications': total_applications,
@@ -224,6 +225,7 @@ def get_student_applications():
                 'applied_on': app.applied_on.isoformat(),
                 'shortlisted_on': app.shortlisted_on.isoformat() if app.shortlisted_on else None,
                 'interview_date': app.interview_date.isoformat() if app.interview_date else None,
+                'interview_link': app.interview_link,
                 'company_feedback': app.company_feedback
             })
 
@@ -361,7 +363,8 @@ def get_profile():
                 'year': student.year,
                 'cgpa': student.cgpa,
                 'bio': student.bio,
-                'resume_url': student.resume_url
+                'resume_url': student.resume_url,
+                'profile_pic': student.profile_pic
             }
         }), 200
     except Exception as e:
@@ -438,4 +441,71 @@ def update_profile():
         }), 200
     except Exception as e:
         db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+
+@student_bp.route('/upload-photo', methods=['POST'])
+@jwt_required()
+@role_required('student')
+def upload_photo():
+    """Upload student profile photo (image file)."""
+    try:
+        user_id = get_jwt_identity()
+        student = Student.query.filter_by(user_id=int(user_id)).first()
+        if not student:
+            return jsonify({'error': 'Student not found'}), 404
+
+        if 'photo' not in request.files:
+            return jsonify({'error': 'No photo uploaded'}), 400
+        file = request.files['photo']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+
+        ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+        if ext not in ('png', 'jpg', 'jpeg', 'webp', 'gif'):
+            return jsonify({'error': 'Only image files (png, jpg, jpeg, webp, gif) allowed'}), 400
+
+        photo_folder = current_app.config['PHOTO_FOLDER']
+        os.makedirs(photo_folder, exist_ok=True)
+        filename = secure_filename(f"{student.id}_{file.filename}")
+        file.save(os.path.join(photo_folder, filename))
+
+        student.profile_pic = f"/uploads/photos/{filename}"
+        db.session.commit()
+        return jsonify({'success': True, 'profile_pic': student.profile_pic, 'message': 'Photo uploaded'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@student_bp.route('/placement/<int:placement_id>/offer-letter', methods=['GET'])
+@jwt_required()
+@role_required('student')
+def download_offer_letter(placement_id):
+    """Generate and download the offer letter PDF for a placement."""
+    try:
+        from flask import send_file
+        from io import BytesIO
+        from offer_letter import build_offer_letter
+
+        user_id = get_jwt_identity()
+        student = Student.query.filter_by(user_id=int(user_id)).first()
+        if not student:
+            return jsonify({'error': 'Student not found'}), 404
+
+        placement = Placement.query.get(placement_id)
+        if not placement or placement.student_id != student.id:
+            return jsonify({'error': 'Placement not found'}), 404
+
+        company = Company.query.get(placement.company_id)
+        pdf_bytes = build_offer_letter(placement, student, company)
+
+        return send_file(
+            BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'offer_letter_{placement.id}.pdf'
+        )
+    except Exception as e:
         return jsonify({'error': str(e)}), 500

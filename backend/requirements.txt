@@ -10,6 +10,7 @@ cachelib==0.13.0
 celery==5.5.3
 certifi==2023.11.17
 chardet==5.2.0
+charset-normalizer==3.4.9
 click==8.1.6
 click-didyoumean==0.3.1
 click-plugins==1.1.1.2
@@ -50,6 +51,7 @@ netifaces==0.11.0
 oauthlib==3.2.2
 packaging==25.0
 passlib==1.7.4
+pillow==12.3.0
 prompt_toolkit==3.0.51
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
@@ -64,9 +66,11 @@ pyrsistent==0.20.0
 pyserial==3.5
 python-apt==2.7.7+ubuntu5.1
 python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
 pytz==2024.1
 PyYAML==6.0.1
 redis==6.2.0
+reportlab==5.0.0
 requests==2.31.0
 rich==13.7.1
 service-identity==24.1.0

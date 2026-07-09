@@ -108,6 +108,7 @@ class Student(db.Model):
     year = db.Column(db.Integer, nullable=True)
     cgpa = db.Column(db.Float, nullable=True)
     resume_url = db.Column(db.String(500), nullable=True)
+    profile_pic = db.Column(db.String(500), nullable=True)
     bio = db.Column(db.Text, nullable=True)
     is_blacklisted = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -175,6 +176,7 @@ class Application(db.Model):
     interview_date = db.Column(db.DateTime, nullable=True)
     interview_result = db.Column(db.String(50), nullable=True)
     company_feedback = db.Column(db.Text, nullable=True)
+    interview_link = db.Column(db.String(500), nullable=True)
     
     __table_args__ = (db.UniqueConstraint('student_id', 'job_position_id', name='unique_student_job_application'),)
     

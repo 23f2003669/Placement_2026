@@ -54,6 +54,9 @@ def create_app(config_name='development'):
 
     from routes_student import student_bp
     app.register_blueprint(student_bp)
+
+    from routes_public import public_bp
+    app.register_blueprint(public_bp)
     
     # ============================================
     # ROUTES (API endpoints)
@@ -77,6 +80,10 @@ def create_app(config_name='development'):
             app.config['UPLOAD_FOLDER'],
             filename
         )
+
+    @app.route('/uploads/photos/<filename>')
+    def uploaded_photo(filename):
+        return send_from_directory(app.config['PHOTO_FOLDER'], filename)
 
 
     print("\n Flask app initialized successfully!")

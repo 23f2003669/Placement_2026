@@ -283,6 +283,9 @@ def get_job_applicants(job_id):
                 'year': student.year,
                 'cgpa': student.cgpa,
                 'resume_url': student.resume_url,
+                'profile_pic': student.profile_pic,
+                'phone': student.phone,
+                'bio': student.bio,
                 'application_status': app.status,
                 'applied_on': app.applied_on.isoformat(),
                 'shortlisted_on': app.shortlisted_on.isoformat() if app.shortlisted_on else None,
@@ -460,21 +463,39 @@ def schedule_interview(application_id):
             return jsonify({'error': 'interview_date is required'}), 400
         
         interview_date_str = data.get('interview_date')
-        
-        # Convert string to datetime
+        interview_link = data.get('interview_link')
+
         try:
             interview_date = datetime.fromisoformat(interview_date_str.replace('Z', '+00:00'))
-        except:
+        except Exception:
             return jsonify({'error': 'Invalid date format. Use ISO format: 2026-06-30T10:00:00'}), 400
-        
-        # Update application
+
         application.status = 'interview'
         application.interview_date = interview_date
-        
+        application.interview_link = interview_link
+
         db.session.commit()
-        
+
         student = Student.query.get(application.student_id)
-        
+
+        try:
+            from email_utils import send_email
+            user = User.query.get(student.user_id)
+            if user and user.email:
+                link_html = (f'<p><strong>Meeting link:</strong> '
+                             f'<a href="{interview_link}">{interview_link}</a></p>') if interview_link else ''
+                html = (
+                    f"<h2>Interview Scheduled</h2>"
+                    f"<p>Hi {student.first_name}, your interview for "
+                    f"<strong>{job.job_title}</strong> at {company.company_name} is scheduled.</p>"
+                    f"<p><strong>Date:</strong> {interview_date.strftime('%d %b %Y, %I:%M %p')}</p>"
+                    f"{link_html}"
+                    f"<p>- Placement Portal</p>"
+                )
+                send_email(user.email, 'Placement Portal - Interview Scheduled', html)
+        except Exception as mail_err:
+            print('[schedule_interview] email failed:', mail_err)
+
         return jsonify({
             'success': True,
             'message': f'Interview scheduled with {student.first_name} {student.last_name}',
@@ -482,7 +503,8 @@ def schedule_interview(application_id):
                 'id': application.id,
                 'student_id': application.student_id,
                 'status': application.status,
-                'interview_date': application.interview_date.isoformat()
+                'interview_date': application.interview_date.isoformat(),
+                'interview_link': application.interview_link
             }
         }), 200
     

@@ -232,8 +232,15 @@ def register_company():
         password_hash = generate_password_hash(password)
         
         # Create user
+        # Build a unique username; fall back to email-based if taken
+        base_username = company_name.lower().replace(' ', '_')
+        username = base_username
+        if User.query.filter_by(username=username).first():
+            username = email.split('@')[0].lower().replace('.', '_')
+            if User.query.filter_by(username=username).first():
+                username = f"{base_username}_{email.split('@')[0]}"
         user = User(
-            username=company_name.lower().replace(' ', '_'),
+            username=username,
             email=email,
             password_hash=password_hash,
             role=UserRole.COMPANY.value,
