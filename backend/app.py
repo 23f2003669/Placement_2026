@@ -2,10 +2,11 @@ from flask import Flask, jsonify, send_from_directory
 import os
 from flask_cors import CORS
 from config import get_config
-from models import db
+from models import db, Student, Company, JobPosition, Application
 from database import init_db
 from datetime import timedelta
 from celery_config import celery_app
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, get_jwt
 def create_app(config_name='development'):
     """
     Application factory - creates and configures the Flask app
@@ -74,12 +75,48 @@ def create_app(config_name='development'):
 
 
     @app.route('/uploads/resumes/<filename>')
+    @jwt_required()
     def uploaded_resume(filename):
+        user_id = int(get_jwt_identity())
+        role = get_jwt().get('role')
 
-        return send_from_directory(
-            app.config['UPLOAD_FOLDER'],
-            filename
-        )
+        # Admin: full access
+        if role == 'admin':
+            return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+        # Student: only own resume
+        if role == 'student':
+            student = Student.query.filter_by(user_id=user_id).first()
+            if student and student.resume_url and student.resume_url.endswith('/' + filename):
+                return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        # Company: resumes of students who applied to this company's jobs
+        if role == 'company':
+            company = Company.query.filter_by(user_id=user_id).first()
+            if not company:
+                return jsonify({'error': 'Company not found'}), 404
+
+            apps = (Application.query
+                    .join(JobPosition, Application.job_position_id == JobPosition.id)
+                    .filter(JobPosition.company_id == company.id)
+                    .all())
+            student_ids = {a.student_id for a in apps}
+            if not student_ids:
+                return jsonify({'error': 'Unauthorized'}), 403
+
+            students = Student.query.filter(Student.id.in_(student_ids)).all()
+            allowed_filenames = {
+                s.resume_url.split('/')[-1] for s in students if s.resume_url
+            }
+
+            if filename in allowed_filenames:
+                return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        return jsonify({'error': 'Unauthorized'}), 403
+
 
     @app.route('/uploads/photos/<filename>')
     def uploaded_photo(filename):

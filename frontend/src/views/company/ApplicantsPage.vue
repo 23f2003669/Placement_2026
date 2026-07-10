@@ -178,8 +178,13 @@
             </div>
           </div>
           <div class="modal-footer">
-            <a v-if="profileData && profileData.resume_url" :href="`http://127.0.0.1:5000${profileData.resume_url}`"
-               target="_blank" class="btn btn-outline-primary">View Resume</a>
+            <button
+              v-if="profileData && profileData.resume_url"
+              class="btn btn-outline-primary"
+              @click="openResume(profileData.resume_url)"
+            >
+              View Resume
+            </button>
             <button class="btn btn-secondary" @click="showProfileModal = false">Close</button>
           </div>
         </div>
@@ -192,8 +197,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { formatDateTime } from '../../utils/date'
 import CompanyLayout from '../../layouts/CompanyLayout.vue'
-import { getApplicants, shortlistStudent, rejectApplication, scheduleInterview, sendResult } from '../../services/company'
+import { getApplicants, shortlistStudent, rejectApplication, scheduleInterview, sendResult, downloadResume } from '../../services/company'
 
 const route = useRoute()
 const applicants = ref([])
@@ -290,6 +296,18 @@ const submitSelection = async () => {
     alert(error.response?.data?.error || 'Failed to select student')
   }
 }
+
+const openResume = async (resumeUrl) => {
+  try {
+    const blob = await downloadResume(resumeUrl) // token attached by axios
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
+  } catch (error) {
+    alert(error.response?.data?.error || 'Unable to open resume')
+  }
+}
+
 
 onMounted(() => {
   loadApplicants()

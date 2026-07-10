@@ -24,6 +24,7 @@ class DriveStatus(str, Enum):
     """Placement drive status"""
     PENDING = "pending"
     APPROVED = "approved"
+    REJECTED = "rejected"
     CLOSED = "closed"
     CANCELLED = "cancelled"
 

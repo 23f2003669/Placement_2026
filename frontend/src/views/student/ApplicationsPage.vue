@@ -35,7 +35,7 @@
               <td>{{ formatDate(app.applied_on) }}</td>
               <td>
                 <div v-if="app.interview_date">
-                  {{ formatDate(app.interview_date) }}
+                  {{ formatDateTime(app.interview_date) }}
                   <a v-if="app.interview_link" :href="app.interview_link" target="_blank"
                      class="btn btn-sm btn-primary ms-1">Join</a>
                 </div>
@@ -54,6 +54,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import StudentLayout from '../../layouts/StudentLayout.vue'
+import { formatDate, formatDateTime } from '../../utils/date'
 import { getMyApplications, exportApplications, getExportStatus } from '../../services/student'
 
 const applications = ref([])
@@ -62,7 +63,7 @@ const exporting = ref(false)
 const exportMsg = ref('')
 const exportMsgType = ref('info')
 
-const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString() : '-'
+
 const statusLabel = (s) => ({ applied:'Applied', shortlisted:'Shortlisted', interview:'Interview', selected:'Selected', rejected:'Rejected' }[s] || s)
 const statusClass = (s) => ({ applied:'bg-secondary', shortlisted:'bg-info text-dark', interview:'bg-warning text-dark', selected:'bg-success', rejected:'bg-danger' }[s] || 'bg-secondary')
 

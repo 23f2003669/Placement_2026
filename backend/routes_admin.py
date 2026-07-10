@@ -17,10 +17,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/api/admin')
 @jwt_required()
 @role_required('admin')
 def admin_dashboard():
-    """
-    Admin dashboard showing key statistics
-    CACHING: 30 minutes
-    """
+    
     try:
         # # Check cache first
         # cached_data = cache_get('admin_dashboard')
@@ -72,10 +69,6 @@ def admin_dashboard():
                 'placements': {'total': total_placements}
             }
         }
-        
-        # Cache for 30 minutes
-        # cache_set('admin_dashboard', response_data, timeout=1800)
-        
         return jsonify(response_data), 200
     
     except Exception as e:
@@ -97,10 +90,7 @@ def admin_dashboard():
 @jwt_required()
 @role_required('admin')
 def get_all_companies():
-    """
-    List all companies (admin). Raw list cached for 5 minutes; the search
-    filter is applied on the cached list each request.
-    """
+    
     try:
         search_query = request.args.get('search', '').lower()
 
@@ -146,10 +136,7 @@ def get_all_companies():
 @jwt_required()
 @role_required('admin')
 def approve_company(company_id):
-    """
-    Admin approves a company registration
-    Once approved, company can create job postings
-    """
+    
     try:
         # Find company
         company = Company.query.get(company_id)
@@ -187,10 +174,6 @@ def approve_company(company_id):
 @jwt_required()
 @role_required('admin')
 def reject_company(company_id):
-    """
-    Admin rejects a company registration
-    Company cannot post jobs and must reapply
-    """
     try:
         # Find company
         company = Company.query.get(company_id)
@@ -228,10 +211,6 @@ def reject_company(company_id):
 @jwt_required()
 @role_required('admin')
 def get_all_students():
-    """
-    List all students (admin). Raw list cached for 5 minutes; the search
-    filter is applied on the cached list each request.
-    """
     try:
         search_query = request.args.get('search', '').lower()
 
@@ -279,10 +258,7 @@ def get_all_students():
 @jwt_required()
 @role_required('admin')
 def blacklist_student(student_id):
-    """
-    Admin blacklists a student
-    Blacklisted student cannot login
-    """
+    
     try:
         # Find student
         student = Student.query.get(student_id)
@@ -327,10 +303,7 @@ def blacklist_student(student_id):
 @jwt_required()
 @role_required('admin')
 def blacklist_company(company_id):
-    """
-    Admin blacklists a company
-    Blacklisted company cannot post jobs
-    """
+    
     try:
         # Find company
         company = Company.query.get(company_id)
@@ -374,10 +347,7 @@ def blacklist_company(company_id):
 @jwt_required()
 @role_required('admin')
 def get_all_job_positions():
-    """
-    Get list of all job positions with their approval status
-    Only admin can access this
-    """
+    
     try:
         # Get all job positions
         jobs = JobPosition.query.all()
@@ -416,10 +386,7 @@ def get_all_job_positions():
 @jwt_required()
 @role_required('admin')
 def approve_job_position(job_id):
-    """
-    Admin approves a job posting
-    Once approved, students can see and apply for this job
-    """
+    
     try:
         # Find job position
         job = JobPosition.query.get(job_id)

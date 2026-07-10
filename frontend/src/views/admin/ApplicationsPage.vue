@@ -54,7 +54,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import AdminLayout from '../../layouts/AdminLayout.vue'
-import { getApplications } from '../../services/applicationAdmin'
+import { getApplications } from '../../services/admin'
 
 const applications = ref([])
 const loading = ref(true)

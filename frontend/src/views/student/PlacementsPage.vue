@@ -41,12 +41,12 @@ import { ref, onMounted } from 'vue'
 import StudentLayout from '../../layouts/StudentLayout.vue'
 import { getPlacements, downloadOfferLetter } from '../../services/student'
 import { formatSalary } from '../../utils/format'
+import { formatDate } from '../../utils/date'
+
 
 const placements = ref([])
 const loading = ref(true)
 const downloadingId = ref(null)
-
-const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString() : '-'
 
 const loadPlacements = async () => {
   loading.value = true

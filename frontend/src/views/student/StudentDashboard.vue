@@ -1,6 +1,5 @@
 <template>
   <StudentLayout>
-
     <div v-if="loading" class="text-muted">Loading dashboard...</div>
 
     <div v-else>
@@ -9,8 +8,13 @@
            style="background:linear-gradient(120deg,#4f46e5,#6366f1);color:#fff">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
           <div class="d-flex align-items-center gap-3">
-            <img v-if="student.profile_pic" :src="`http://127.0.0.1:5000${student.profile_pic}`"
-                 class="rounded-circle" style="width:72px;height:72px;object-fit:cover;border:3px solid rgba(255,255,255,.5)" />
+            <img
+              v-if="student.profile_pic && !photoBroken"
+              :src="`http://127.0.0.1:5000${student.profile_pic}`"
+              @error="photoBroken = true"
+              class="rounded-circle"
+              style="width:72px;height:72px;object-fit:cover;border:3px solid rgba(255,255,255,.5)"
+            />
             <div v-else class="rounded-circle d-flex align-items-center justify-content-center"
                  style="width:72px;height:72px;background:rgba(255,255,255,.25);font-size:1.6rem;font-weight:600">
               {{ initials }}
@@ -31,7 +35,7 @@
         </div>
       </div>
 
-      <!-- Stat cards -->
+      <!-- rest of your existing dashboard template stays same -->
       <div class="row g-3 mb-4">
         <div class="col-6 col-md-3" v-for="s in statCards" :key="s.label">
           <div class="card shadow border-0 p-3 h-100 stat-card">
@@ -50,7 +54,6 @@
       </div>
 
       <div class="row g-4">
-        <!-- Application status chart -->
         <div class="col-md-5">
           <div class="card shadow border-0 p-4 h-100">
             <h6 class="mb-3 section-title">Application Status</h6>
@@ -63,7 +66,6 @@
           </div>
         </div>
 
-        <!-- Recent applications -->
         <div class="col-md-7">
           <div class="card shadow border-0 p-4 h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -93,12 +95,12 @@
         </div>
       </div>
     </div>
-
   </StudentLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { formatDate } from '../../utils/date'
 import StudentLayout from '../../layouts/StudentLayout.vue'
 import { getDashboard, getMyApplications } from '../../services/student'
 import { Doughnut } from 'vue-chartjs'
@@ -109,6 +111,7 @@ const loading = ref(true)
 const student = ref({})
 const stats = ref({})
 const applications = ref([])
+const photoBroken = ref(false) // <-- add this
 
 const initials = computed(() => {
   const f = (student.value.first_name || '?')[0]
@@ -134,13 +137,12 @@ const statusChart = computed(() => {
   const labels = Object.keys(counts)
   return {
     labels,
-    datasets: [{ data: labels.map(k => counts[k]),
-      backgroundColor: ['#6b7280', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'], borderWidth: 0 }]
+    datasets: [{ data: labels.map(k => counts[k]), backgroundColor: ['#6b7280', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'], borderWidth: 0 }]
   }
 })
+
 const chartOptions = { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } }, cutout: '68%' }
 
-// Plugin: draw total in the doughnut center
 const centerTextPlugin = {
   id: 'centerText',
   beforeDraw(chart) {
@@ -162,22 +164,25 @@ const centerTextPlugin = {
   }
 }
 
-const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString() : '-'
 const statusClass = (s) => ({ applied:'bg-secondary', shortlisted:'bg-info text-dark', interview:'bg-warning text-dark', selected:'bg-success', rejected:'bg-danger' }[s] || 'bg-secondary')
 
 const load = async () => {
   loading.value = true
+  photoBroken.value = false // reset on load
   try {
     const dash = await getDashboard()
     student.value = dash.data.student
     stats.value = dash.data.statistics
     const apps = await getMyApplications()
     applications.value = apps.applications || []
-  } catch (e) { console.error('dashboard error', e) }
-  finally { loading.value = false }
+  } catch (e) {
+    console.error('dashboard error', e)
+  } finally {
+    loading.value = false
+  }
 }
 
-onMounted(() => load())
+onMounted(load)
 </script>
 
 <style scoped>

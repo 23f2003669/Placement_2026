@@ -42,3 +42,8 @@ export const closeJob = async (jobId) => {
   const response = await api.post(`/api/company/close-job/${jobId}`)
   return response.data
 }
+
+export const downloadResume = async (resumeUrl) => {
+  const response = await api.get(resumeUrl, { responseType: 'blob' })
+  return response.data
+}

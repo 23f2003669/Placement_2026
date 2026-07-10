@@ -68,7 +68,7 @@
 
           <div class="mb-4">
             <label class="form-label">Application Deadline *</label>
-            <input type="datetime-local" class="form-control" v-model="form.application_deadline" required />
+           <input type="datetime-local" class="form-control" v-model="form.application_deadline" :min="minDeadline" required />
           </div>
 
           <button class="btn btn-success" type="submit" :disabled="loading">
@@ -89,7 +89,7 @@ import api from '../../services/api'
 
 const router = useRouter()
 const loading = ref(false)
-
+const minDeadline = new Date().toISOString().slice(0, 16)
 const form = ref({
   job_title: '',
   job_description: '',
@@ -108,6 +108,11 @@ const form = ref({
 const createJob = async () => {
   try {
     loading.value = true
+    if (form.value.salary_min && form.value.salary_max &&
+        Number(form.value.salary_min) > Number(form.value.salary_max)) {
+      alert('Salary Min cannot be greater than Salary Max')
+      return
+    }
     const payload = {
       ...form.value,
       application_deadline: new Date(form.value.application_deadline).toISOString()

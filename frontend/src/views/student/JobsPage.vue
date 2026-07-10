@@ -98,6 +98,7 @@ import { ref, computed, onMounted } from 'vue'
 import StudentLayout from '../../layouts/StudentLayout.vue'
 import { getJobs, getMyApplications, applyJob } from '../../services/student'
 import { formatSalaryRange } from '../../utils/format'
+import { formatDate } from '../../utils/date'
 
 const jobs = ref([])
 const appliedJobIds = ref([])
@@ -120,11 +121,6 @@ const showMessage = (text, type = 'success') => {
   message.value = text
   messageType.value = type
   setTimeout(() => { message.value = '' }, 4000)
-}
-
-const formatDate = (isoString) => {
-  if (!isoString) return 'N/A'
-  return new Date(isoString).toLocaleDateString()
 }
 
 const loadJobs = async () => {

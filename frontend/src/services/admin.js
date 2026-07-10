@@ -1,73 +1,50 @@
 import api from './api'
 
-const getAuthHeader = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('token')}`
-  }
-})
+// Dashboard + analytics
+export const getDashboardStats = async () =>
+  (await api.get('/api/admin/dashboard')).data
 
-export const getDashboardStats = async () => {
-  const response = await api.get(
-    '/api/admin/dashboard',
-    getAuthHeader()
-  )
-  return response.data
-}
+export const getAdminAnalytics = async () =>
+  (await api.get('/api/admin/analytics')).data
 
-export const getCompanies = async () => {
-  const response = await api.get(
-    '/api/admin/companies',
-    getAuthHeader()
-  )
-  return response.data
-}
+// Companies
+export const getCompanies = async (search = '') =>
+  (await api.get('/api/admin/companies', {
+    params: search ? { search } : {}
+  })).data
 
-export const getStudents = async () => {
-  const response = await api.get(
-    '/api/admin/students',
-    getAuthHeader()
-  )
-  return response.data
-}
+export const approveCompany = async (id) =>
+  (await api.post(`/api/admin/approve-company/${id}`, {})).data
 
-export const getApplications = async () => {
-  const response = await api.get(
-    '/api/admin/applications',
-    getAuthHeader()
-  )
-  return response.data
-}
+export const rejectCompany = async (id) =>
+  (await api.post(`/api/admin/reject-company/${id}`, {})).data
 
-export const approveCompany = async (id) => {
+// Students
+export const getStudents = async (search = '') =>
+  (await api.get('/api/admin/students', {
+    params: search ? { search } : {}
+  })).data
 
-  const response = await api.post(
-    `/api/admin/approve-company/${id}`,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    }
-  )
+export const blacklistStudent = async (id) =>
+  (await api.post(`/api/admin/blacklist-student/${id}`, {})).data
 
-  return response.data
-}
+export const unblacklistStudent = async (id) =>
+  (await api.post(`/api/admin/unblacklist-student/${id}`, {})).data
 
-export const rejectCompany = async (id) => {
+// Jobs
+export const getJobs = async () =>
+  (await api.get('/api/admin/job-positions')).data
 
-  const response = await api.post(
-    `/api/admin/reject-company/${id}`,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    }
-  )
+export const approveJob = async (id) =>
+  (await api.post(`/api/admin/approve-job/${id}`, {})).data
 
-  return response.data
-}
-export const getAdminAnalytics = async () => {
-  const response = await api.get('/api/admin/analytics', getAuthHeader())
-  return response.data
-}
+export const rejectJob = async (id) =>
+  (await api.post(`/api/admin/reject-job/${id}`, {})).data
+
+// Applications
+export const getApplications = async () =>
+  (await api.get('/api/admin/applications')).data
+
+// Placements
+export const getPlacements = async () =>
+  (await api.get('/api/admin/placements')).data
