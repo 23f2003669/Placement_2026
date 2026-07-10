@@ -60,7 +60,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import AdminLayout from '../../layouts/AdminLayout.vue'
-import { getCompanies, approveCompany, rejectCompany } from '../../services/companyAdmin'
+import { getCompanies, approveCompany, rejectCompany } from '../../services/admin'
 
 const companies = ref([])
 const searchQuery = ref('')

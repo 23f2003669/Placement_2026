@@ -59,7 +59,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import AdminLayout from '../../layouts/AdminLayout.vue'
-import { getStudents, blacklistStudent, unblacklistStudent } from '../../services/studentAdmin'
+import { getStudents, blacklistStudent, unblacklistStudent } from '../../services/admin'
 
 const students = ref([])
 const searchQuery = ref('')
