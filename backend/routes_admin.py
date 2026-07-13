@@ -18,12 +18,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/api/admin')
 @role_required('admin')
 def admin_dashboard():
     
-    try:
-        # # Check cache first
-        # cached_data = cache_get('admin_dashboard')
-        # if cached_data:
-        #     return jsonify(cached_data), 200
-        
+    try:   
         # Count total students
         total_students = Student.query.count()
         

@@ -75,7 +75,6 @@ Start the Flask application:
 ```bash
 python3 app.py
 ```
-## Backend Setup
 
 The backend runs on `http://127.0.0.1:5000` by default. The frontend
 (`frontend/src/services/api.js`) is hardcoded to this address — if you change
@@ -111,8 +110,6 @@ Start the Redis server:
 ```bash
 redis-server
 ```
-
-## Celery
 
 ## Celery
 
