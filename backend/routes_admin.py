@@ -565,11 +565,17 @@ def get_all_applications():
             applications = [a for a in applications if a.status == status_filter]
         
         # Filter by search query
+        # Filter by search query
         if search_query:
-            applications = [a for a in applications if 
-                          search_query in Student.query.get(a.student_id).first_name.lower() or
-                          search_query in Student.query.get(a.student_id).last_name.lower() or
-                          search_query in JobPosition.query.get(a.job_position_id).job_title.lower()]
+            filtered = []
+            for a in applications:
+                s = Student.query.get(a.student_id)
+                j = JobPosition.query.get(a.job_position_id)
+                if (search_query in (s.first_name or '').lower() or
+                        search_query in (s.last_name or '').lower() or
+                        search_query in (j.job_title or '').lower()):
+                    filtered.append(a)
+            applications = filtered
         
         app_list = []
         for app in applications:

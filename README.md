@@ -33,7 +33,7 @@ cd backend
 Create a Python virtual environment:
 
 ```bash
-python3 -m venv venv
+python -m venv venv
 ```
 
 Activate the virtual environment:
@@ -54,13 +54,33 @@ Create the environment configuration file:
 cp .env.example .env
 ```
 
-Update the required environment variables in `.env`.
+Update the required environment variables in `.env`:
+
+```text
+SECRET_KEY            - any random string, used to sign JWTs
+ADMIN_EMAIL            - email for the pre-created admin account
+ADMIN_PASSWORD          - password for the pre-created admin account
+REDIS_URL              - Redis connection string for caching
+CELERY_BROKER_URL        - Redis connection string for the Celery broker
+CELERY_RESULT_BACKEND      - Redis connection string for Celery results
+MAIL_SERVER, MAIL_PORT      - SMTP server details (default: Gmail SMTP)
+MAIL_USERNAME, MAIL_PASSWORD   - sender email + app password (see comment in .env.example)
+MAIL_DEFAULT_SENDER        - "From" address for outgoing mail
+```
+
+Email variables power the daily reminders, monthly report, and interview-scheduled notifications. If left unset, those Celery tasks run and log a skipped-send message instead of failing.
 
 Start the Flask application:
 
 ```bash
-python app.py
+python3 app.py
 ```
+## Backend Setup
+
+The backend runs on `http://127.0.0.1:5000` by default. The frontend
+(`frontend/src/services/api.js`) is hardcoded to this address — if you change
+the Flask port, update it there too.
+
 
 ## Frontend Setup
 
@@ -94,7 +114,31 @@ redis-server
 
 ## Celery
 
-Celery is used for scheduled and asynchronous background jobs.
+## Celery
+
+Celery is used for scheduled and asynchronous background jobs. Redis must be
+running first (see above). Open two more terminals from the `backend/`
+directory (with the venv activated):
+
+Start the Celery worker (runs the background jobs):
+
+```bash
+cd ~/Placement_2026/backend
+source venv/bin/activate
+celery -A celery_config.celery_app worker --loglevel=info
+```
+
+Start Celery beat (triggers the scheduled jobs — daily reminders at 9 AM UTC,
+monthly report on the 1st at 8 AM UTC):
+
+```bash
+cd ~/Placement_2026/backend
+source venv/bin/activate
+celery -A celery_config.celery_app beat --loglevel=info
+```
+
+The CSV export job doesn't need beat — it's triggered on-demand from the
+student dashboard and only needs the worker running.
 
 The application implements:
 
