@@ -106,9 +106,9 @@
 
       <div class="card shadow border-0 p-4">
         <h5 class="mb-3">Resume</h5>
-        <p v-if="profile.resume_url" class="mb-3">Current resume:
-          <a :href="resumeLink" target="_blank">View uploaded resume</a>
-        </p>
+       <p v-if="profile.resume_url" class="mb-3">Current resume:
+        <button type="button" class="btn btn-link p-0 align-baseline" @click="viewResume">View uploaded resume</button>
+      </p>
         <p v-else class="text-muted mb-3">No resume uploaded yet.</p>
         <div class="input-group" style="max-width: 500px;">
           <input ref="fileInput" type="file" class="form-control" @change="onFileChange" />
@@ -124,7 +124,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import StudentLayout from '../../layouts/StudentLayout.vue'
-import { getProfile, updateProfile, uploadResume, uploadPhoto } from '../../services/student'
+import { getProfile, updateProfile, uploadResume, uploadPhoto,downloadResume } from '../../services/student'
 
 const API = 'http://127.0.0.1:5000'
 
@@ -143,8 +143,19 @@ const message = ref('')
 const messageType = ref('success')
 const photoBroken = ref(false) // <-- add this
 
-const resumeLink = computed(() => (profile.value.resume_url ? API + profile.value.resume_url : '#'))
+
 const photoLink = computed(() => (profile.value.profile_pic ? API + profile.value.profile_pic : ''))
+
+const viewResume = async () => {
+  try {
+    const blob = await downloadResume(profile.value.resume_url) // JWT attached by axios interceptor
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
+  } catch (error) {
+    alert(error.response?.data?.error || 'Unable to open resume')
+  }
+}
 const initials = computed(() => {
   const f = (profile.value.first_name || '?')[0]
   const l = (profile.value.last_name || '')[0] || ''

@@ -78,3 +78,8 @@ export const downloadOfferLetter = async (placementId) => {
   })
   return response.data
 }
+
+export const downloadResume = async (resumeUrl) => {
+  const response = await api.get(resumeUrl, { responseType: 'blob' })
+  return response.data
+}
